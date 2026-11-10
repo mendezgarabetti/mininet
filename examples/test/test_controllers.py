@@ -17,14 +17,14 @@ class testControllers( unittest.TestCase ):
         p.expect( self.prompt )
         # but first a simple ping test
         p.sendline( 'pingall' )
-        p.expect ( '(\d+)% dropped' )
+        p.expect ( r'(\d+)% dropped' )
         percent = int( p.match.group( 1 ) ) if p.match else -1
         self.assertEqual( percent, 0 )
         p.expect( self.prompt )
         # verify connected controller
         for switch in cmap:
             p.sendline( 'sh ovs-vsctl get-controller %s' % switch )
-            p.expect( 'tcp:([\d.:]+)')
+            p.expect( r'tcp:([\d.:]+)')
             actual = p.match.group(1)
             expected = cmap[ switch ]
             self.assertEqual( actual, expected )

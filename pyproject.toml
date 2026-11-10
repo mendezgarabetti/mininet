@@ -1,0 +1,32 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "mininet"
+dynamic = ["version"]
+description = "Process-based network emulator"
+readme = "README.md"
+license = {text = "BSD-3-Clause"}
+requires-python = ">=3.8"
+authors = [
+    {name = "Bob Lantz", email = "rlantz@cs.stanford.edu"},
+    {name = "Miguel Méndez Garabetti", email = "miguelmendezgarabetti@gmail.com"},
+]
+keywords = ["networking", "emulator", "protocol", "Internet", "OpenFlow", "SDN"]
+classifiers = [
+    "License :: OSI Approved :: BSD License",
+    "Programming Language :: Python :: 3",
+    "Development Status :: 5 - Production/Stable",
+    "Intended Audience :: Developers",
+    "Intended Audience :: Education",
+    "Intended Audience :: Science/Research",
+    "Topic :: System :: Emulators",
+]
+
+[tool.setuptools]
+packages = ["mininet", "mininet.examples"]
+script-files = ["bin/mn"]
+
+[tool.setuptools.dynamic]
+version = {attr = "mininet.net.VERSION"}

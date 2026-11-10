@@ -29,7 +29,7 @@ class testHwintf( unittest.TestCase ):
         p = pexpect.spawn( 'python -m mininet.examples.hwintf %s' % self.n0.intf() )
         p.expect( self.prompt )
         p.sendline( 'pingall' )
-        p.expect ( '(\d+)% dropped' )
+        p.expect ( r'(\d+)% dropped' )
         percent = int( p.match.group( 1 ) ) if p.match else -1
         self.assertEqual( percent, 0 )
         p.expect( self.prompt )
@@ -41,7 +41,7 @@ class testHwintf( unittest.TestCase ):
         p = pexpect.spawn( 'python -m mininet.examples.hwintf %s' % self.n0.intf() )
         p.expect( self.prompt )
         # test ping external to internal
-        expectStr = '(\d+) packets transmitted, (\d+) received'
+        expectStr = r'(\d+) packets transmitted, (\d+) received'
         m = re.search( expectStr, self.h3.cmd( 'ping -v -c 1 10.0.0.1' ) )
         tx = m.group( 1 )
         rx = m.group( 2 )

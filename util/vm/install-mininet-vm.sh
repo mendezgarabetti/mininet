@@ -33,15 +33,15 @@ if [ "$1" != "" ]; then
     git checkout $1
     popd
 fi
-# Install Mininet for Python2 and Python3
+# Install Mininet for Python 3 (and Python 2 only if available on legacy releases)
 APT="sudo apt-get -y -qq"
-$APT install python3
-$APT install python2 || $APT install python
-python --version || $APT install python-is-python3
-time PYTHON=python2 mininet/util/install.sh -n
+$APT install python3 python-is-python3 || $APT install python3
+if apt-cache show python2 >/dev/null 2>&1; then
+    $APT install python2 && time PYTHON=python2 mininet/util/install.sh -n || true
+fi
 time PYTHON=python3 mininet/util/install.sh
 # Finalize VM
-time mininet/util/install.sh -tcd
+time PYTHON=python3 mininet/util/install.sh -tcd
 # Ignoring this since NOX classic is deprecated
 #if ! grep NOX_CORE_DIR .bashrc; then
 #  echo "export NOX_CORE_DIR=~/noxcore/build/src/" >> .bashrc

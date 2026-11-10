@@ -27,7 +27,7 @@ class testCPU( unittest.TestCase ):
         "Verify that CPU utilization is monotonically decreasing for each scheduler"
         p = pexpect.spawn( 'python -m mininet.examples.cpu', timeout=300 )
         # matches each line from results( shown above )
-        opts = [ '([a-z]+)\t([\d\.]+)%\t([\d\.e\+]+)',
+        opts = [ r'([a-z]+)\t([\d\.]+)%\t([\d\.e\+]+)',
                  pexpect.EOF ]
         scheds = []
         while True:

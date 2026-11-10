@@ -18,7 +18,7 @@ class testControlNet( unittest.TestCase ):
         p = pexpect.spawn( 'python -m mininet.examples.controlnet', logfile=stdout)
         p.expect( self.prompt )
         p.sendline( 'pingall' )
-        p.expect ( '(\d+)% dropped' )
+        p.expect ( r'(\d+)% dropped' )
         percent = int( p.match.group( 1 ) ) if p.match else -1
         self.assertEqual( percent, 0 )
         p.expect( self.prompt )
@@ -31,14 +31,14 @@ class testControlNet( unittest.TestCase ):
         p = pexpect.spawn( 'python -m mininet.examples.controlnet', logfile=stdout )
         p.expect( self.prompt )
         lp = pexpect.spawn( 'tail -f /tmp/s1-ofp.log', logfile=stdout )
-        lp.expect( 'tcp:\d+\.\d+\.\d+\.(\d+):\d+: connected' )
+        lp.expect( r'tcp:\d+\.\d+\.\d+\.(\d+):\d+: connected' )
         ip = int( lp.match.group( 1 ) )
         self.assertEqual( count, ip )
         count += 1
         for c in [ 'c0', 'c1' ]:
             p.sendline( '%s ifconfig %s-eth0 down' % ( c, c) )
             p.expect( self.prompt )
-            lp.expect( 'tcp:\d+\.\d+\.\d+\.(\d+):\d+: connected' )
+            lp.expect( r'tcp:\d+\.\d+\.\d+\.(\d+):\d+: connected' )
             ip = int( lp.match.group( 1 ) )
             self.assertEqual( count, ip )
             count += 1

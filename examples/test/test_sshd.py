@@ -10,7 +10,7 @@ from mininet.clean import sh
 
 class testSSHD( unittest.TestCase ):
 
-    opts = [ '\(yes/no\)\?', 'refused', 'Welcome|\$|#', pexpect.EOF, pexpect.TIMEOUT ]
+    opts = [ r'\(yes/no\)\?', 'refused', r'Welcome|\$|#', pexpect.EOF, pexpect.TIMEOUT ]
 
     def connected( self, ip ):
         "Log into ssh server, check banner, then exit"

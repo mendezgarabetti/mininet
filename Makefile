@@ -2,7 +2,7 @@ MININET = mininet/*.py
 TEST = mininet/test/*.py
 EXAMPLES = mininet/examples/*.py
 MN = bin/mn
-PYTHON ?= python
+PYTHON ?= python3
 PYMN = $(PYTHON) -B bin/mn
 BIN = $(MN)
 PYSRC = $(MININET) $(TEST) $(EXAMPLES) $(BIN)
@@ -28,7 +28,8 @@ codecheck: $(PYSRC)
 	util/versioncheck.py
 	pyflakes3 $(PYSRC) || pyflakes $(PYSRC)
 	pylint --rcfile=.pylint $(PYSRC)
-#	Exclude miniedit from pep8 checking for now
+#	Exclude miniedit from pep8/pycodestyle checking for now
+	(which pycodestyle >/dev/null && pycodestyle --repeat --ignore=$(P8IGN) `ls $(PYSRC) | grep -v miniedit.py`) || \
 	pep8 --repeat --ignore=$(P8IGN) `ls $(PYSRC) | grep -v miniedit.py`
 
 errcheck: $(PYSRC)
@@ -57,16 +58,16 @@ install-manpages: $(MANPAGES)
 	install -D -t $(MANDIR) $(MANPAGES)
 
 install: install-mnexec install-manpages
-#	This seems to work on all pip versions
-	$(PYTHON) -m pip uninstall -y mininet || true
-	$(PYTHON) -m pip install .
+#	Support PEP 668 (--break-system-packages) on modern Debian/Ubuntu as well as older pip
+	$(PYTHON) -m pip uninstall -y --break-system-packages mininet 2>/dev/null || $(PYTHON) -m pip uninstall -y mininet || true
+	$(PYTHON) -m pip install --break-system-packages --no-build-isolation . 2>/dev/null || $(PYTHON) -m pip install .
 
 develop: $(MNEXEC) $(MANPAGES)
 # 	Perhaps we should link these as well
 	install $(MNEXEC) $(BINDIR)
 	install $(MANPAGES) $(MANDIR)
-	$(PYTHON) -m pip uninstall -y mininet || true
-	$(PYTHON) -m pip install -e . --no-binary :all:
+	$(PYTHON) -m pip uninstall -y --break-system-packages mininet 2>/dev/null || $(PYTHON) -m pip uninstall -y mininet || true
+	$(PYTHON) -m pip install --break-system-packages --no-build-isolation -e . --no-binary :all: 2>/dev/null || $(PYTHON) -m pip install -e . --no-binary :all:
 
 man: $(MANPAGES)
 

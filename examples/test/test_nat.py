@@ -21,7 +21,7 @@ class testNAT( unittest.TestCase ):
         p = pexpect.spawn( 'python -m mininet.examples.nat' )
         p.expect( self.prompt )
         p.sendline( 'h1 ping -c 1 %s' % destIP )
-        p.expect ( '(\d+)% packet loss' )
+        p.expect ( r'(\d+)% packet loss' )
         percent = int( p.match.group( 1 ) ) if p.match else -1
         p.expect( self.prompt )
         p.sendline( 'exit' )

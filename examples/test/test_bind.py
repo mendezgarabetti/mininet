@@ -13,7 +13,7 @@ class testBind( unittest.TestCase ):
 
     def setUp( self ):
         self.net = pexpect.spawn( 'python -m mininet.examples.bind' )
-        self.net.expect( "Private Directories: \[([\w\s,'/]+)\]" )
+        self.net.expect( r"Private Directories: \[([\w\s,'/]+)\]" )
         self.directories = []
         # parse directories from mn output
         for d in self.net.match.group(1).split(', '):

@@ -16,7 +16,7 @@ class testMultiLink( unittest.TestCase ):
         p = pexpect.spawn( 'python -m mininet.examples.multilink' )
         p.expect( self.prompt )
         p.sendline( 'intfs' )
-        p.expect( 's(\d): lo' )
+        p.expect( r's(\d): lo' )
         intfsOutput = p.before
         # parse interfaces from mininet intfs, and store them in a list
         hostToIntfs = intfsOutput.split( '\r\n' )[ 1:3 ]
@@ -27,7 +27,7 @@ class testMultiLink( unittest.TestCase ):
 
         # get interfaces from system by running ifconfig on every host
         sysIntfList = []
-        opts = [ 'h(\d)-eth(\d)', self.prompt ]
+        opts = [ r'h(\d)-eth(\d)', self.prompt ]
         p.expect( self.prompt )
 
         p.sendline( 'h1 ifconfig' )

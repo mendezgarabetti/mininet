@@ -152,3 +152,28 @@ class NAT( Node ):
         # Put the forwarding state back to what it was
         self.cmd( 'sysctl net.ipv4.ip_forward=%s' % self.forwardState )
         super( NAT, self ).terminate()
+
+
+class LinuxRouter( Node ):
+    "A Node with IPv4 forwarding enabled by default."
+
+    def config( self, **params ):
+        "Configure router and enable IPv4 packet forwarding"
+        super( LinuxRouter, self ).config( **params )
+        self.cmd( 'sysctl -w net.ipv4.ip_forward=1' )
+
+    def terminate( self ):
+        "Disable IPv4 packet forwarding and terminate"
+        self.cmd( 'sysctl -w net.ipv4.ip_forward=0' )
+        super( LinuxRouter, self ).terminate()
+
+    def addStaticRoute( self, subnet, via, intf=None ):
+        "Add a static IPv4 route via next-hop IP (and optional interface)"
+        cmd = 'ip route replace %s via %s' % ( subnet, via )
+        if intf:
+            cmd += ' dev %s' % intf
+        return self.cmd( cmd )
+
+    def delStaticRoute( self, subnet ):
+        "Delete a static IPv4 route"
+        return self.cmd( 'ip route del %s' % subnet )
