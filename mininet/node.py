@@ -666,11 +666,11 @@ class Node( object ):
     def checkSetup( cls ):
         "Make sure our class and superclasses are set up"
         clas = cls
-        while clas and not getattr( clas, 'isSetup', True ):
-            clas.setup()
-            clas.isSetup = True
-            # Make pylint happy
-            clas = getattr( type( clas ), '__base__', None )
+        while clas and clas is not object:
+            if not clas.__dict__.get( 'isSetup', False ):
+                clas.setup()
+                clas.isSetup = True
+            clas = getattr( clas, '__base__', None )
 
     @classmethod
     def setup( cls ):
@@ -1168,7 +1168,9 @@ class OVSSwitch( Switch ):
 
     @classmethod
     def isOldOVS( cls ):
-        "Is OVS ersion < 1.10?"
+        "Is OVS version < 1.10?"
+        if not getattr( cls, 'OVSVersion', None ):
+            cls.setup()
         return ( StrictVersion( cls.OVSVersion ) <
                  StrictVersion( '1.10' ) )
 
