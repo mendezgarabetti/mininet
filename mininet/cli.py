@@ -387,27 +387,44 @@ class CLI( Cmd ):
         for link in self.mn.links:
             output( link, link.status(), '\n' )
 
+    def nodesFromArgs( self, line, cmd ):
+        """Return the nodes named in line, reporting unknown names,
+           or None if line names no nodes"""
+        args = line.split()
+        if not args:
+            return None
+        for arg in args:
+            if arg not in self.mn:
+                error( '%s: unknown node: %s\n' % ( cmd, arg ) )
+        return [ self.mn[ arg ] for arg in args if arg in self.mn ]
+
+    def showNamespaceTable( self, line, cmd, shellCmd ):
+        """Run shellCmd on the given nodes (default: hosts) and print
+           its output; skip nodes that share the root namespace, since
+           their tables are those of the machine running Mininet"""
+        nodes = self.nodesFromArgs( line, cmd )
+        if nodes is None:
+            nodes = [ host for host in self.mn.hosts if host.inNamespace ]
+        for node in nodes:
+            if not node.inNamespace:
+                hint = ( "; use 'macs %s'" % node.name
+                         if node in self.mn.switches else '' )
+                error( '%s: %s is in the root network namespace (its table '
+                       'is the host machine\'s); skipping%s\n' %
+                       ( cmd, node.name, hint ) )
+                continue
+            output( '*** ' + node.name + ' ' + ( '-' * 72 ) + '\n' )
+            output( node.cmd( shellCmd ) )
+
     def do_routes( self, line ):
         """Display IP routing tables for all hosts/routers or given nodes.
            Usage: routes [node1 node2 ...]"""
-        args = line.split()
-        nodes = [ self.mn[ a ] for a in args if a in self.mn ]
-        if not nodes:
-            nodes = self.mn.hosts
-        for node in nodes:
-            output( '*** ' + node.name + ' ' + ( '-' * 72 ) + '\n' )
-            output( node.cmd( 'ip route' ) )
+        self.showNamespaceTable( line, 'routes', 'ip route' )
 
     def do_arps( self, line ):
         """Display ARP/neighbor tables for all hosts or given nodes.
            Usage: arps [node1 node2 ...]"""
-        args = line.split()
-        nodes = [ self.mn[ a ] for a in args if a in self.mn ]
-        if not nodes:
-            nodes = self.mn.hosts
-        for node in nodes:
-            output( '*** ' + node.name + ' ' + ( '-' * 72 ) + '\n' )
-            output( node.cmd( 'ip neigh' ) )
+        self.showNamespaceTable( line, 'arps', 'ip neigh' )
 
     def do_macs( self, line ):
         """Display learned MAC tables for all switches or given switches.
