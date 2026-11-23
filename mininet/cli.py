@@ -387,6 +387,42 @@ class CLI( Cmd ):
         for link in self.mn.links:
             output( link, link.status(), '\n' )
 
+    def do_routes( self, line ):
+        """Display IP routing tables for all hosts/routers or given nodes.
+           Usage: routes [node1 node2 ...]"""
+        args = line.split()
+        nodes = [ self.mn[ a ] for a in args if a in self.mn ]
+        if not nodes:
+            nodes = self.mn.hosts
+        for node in nodes:
+            output( '*** ' + node.name + ' ' + ( '-' * 72 ) + '\n' )
+            output( node.cmd( 'ip route' ) )
+
+    def do_arps( self, line ):
+        """Display ARP/neighbor tables for all hosts or given nodes.
+           Usage: arps [node1 node2 ...]"""
+        args = line.split()
+        nodes = [ self.mn[ a ] for a in args if a in self.mn ]
+        if not nodes:
+            nodes = self.mn.hosts
+        for node in nodes:
+            output( '*** ' + node.name + ' ' + ( '-' * 72 ) + '\n' )
+            output( node.cmd( 'ip neigh' ) )
+
+    def do_macs( self, line ):
+        """Display learned MAC tables for all switches or given switches.
+           Usage: macs [switch1 switch2 ...]"""
+        args = line.split()
+        switches = [ self.mn[ a ] for a in args if a in self.mn ]
+        if not switches:
+            switches = self.mn.switches
+        for sw in switches:
+            output( '*** ' + sw.name + ' ' + ( '-' * 72 ) + '\n' )
+            cmd = ( 'ovs-appctl fdb/show %s 2>/dev/null || '
+                    'brctl showmacs %s 2>/dev/null || '
+                    'bridge fdb show br %s' % ( sw.name, sw.name, sw.name ) )
+            output( sw.cmd( cmd ) )
+
     def do_switch( self, line ):
         "Starts or stops a switch"
         args = line.split()
