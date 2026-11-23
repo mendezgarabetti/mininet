@@ -665,12 +665,13 @@ class Node( object ):
     @classmethod
     def checkSetup( cls ):
         "Make sure our class and superclasses are set up"
-        clas = cls
-        while clas and clas is not object:
-            if not clas.__dict__.get( 'isSetup', False ):
+        # Walk the whole MRO so that mixins (e.g. RemoteMixin in
+        # examples/cluster.py), which have no setup(), are skipped
+        for clas in cls.__mro__:
+            if ( issubclass( clas, Node ) and
+                 not clas.__dict__.get( 'isSetup', False ) ):
                 clas.setup()
                 clas.isSetup = True
-            clas = getattr( clas, '__base__', None )
 
     @classmethod
     def setup( cls ):
