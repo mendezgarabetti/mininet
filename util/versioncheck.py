@@ -13,7 +13,9 @@ version = 'Mininet ' + run( 'PYTHONPATH=. python3 bin/mn --version 2>&1', shell=
 version = version.strip()
 
 # Find all Mininet path references
-lines = run( r"grep -E -or 'Mininet [0-9\.\+]+\w*' *", shell=True )
+# (including PEP 440 local version labels such as 2.3.1b4+edu.1)
+lines = run( r"grep -E -or 'Mininet [0-9\.\+]+\w*(\+\w+(\.\w+)*)?' *",
+             shell=True )
 
 error = False
 

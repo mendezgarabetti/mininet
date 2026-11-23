@@ -665,12 +665,13 @@ class Node( object ):
     @classmethod
     def checkSetup( cls ):
         "Make sure our class and superclasses are set up"
-        clas = cls
-        while clas and clas is not object:
-            if not clas.__dict__.get( 'isSetup', False ):
+        # Walk the whole MRO so that mixins (e.g. RemoteMixin in
+        # examples/cluster.py), which have no setup(), are skipped
+        for clas in cls.__mro__:
+            if ( issubclass( clas, Node ) and
+                 not clas.__dict__.get( 'isSetup', False ) ):
                 clas.setup()
                 clas.isSetup = True
-            clas = getattr( clas, '__base__', None )
 
     @classmethod
     def setup( cls ):
@@ -703,6 +704,8 @@ class CPULimitedHost( Host ):
         # Initialize class if necessary
         if not CPULimitedHost.inited:
             CPULimitedHost.init()
+        # cgroups v2 has no cpu.rt_* interface files
+        self.sched = self.checkSched( self.sched )
         # Create a cgroup and move shell into it
         if self.cgversion == 'cgroup2':
             self.cgroup = 'cpu,cpuset:/' + self.name
@@ -762,6 +765,14 @@ class CPULimitedHost( Host ):
                 os.rmdir( cgpath )
                 return True
             except OSError:
+                # Processes left behind (e.g. a popen()ed server that
+                # ignored SIGTERM) keep the cgroup busy: kill them
+                # (cgroup.kill needs Linux >= 5.14) and let retry() retry
+                try:
+                    with open( cgpath + '/cgroup.kill', 'w' ) as f:
+                        f.write( '1\n' )
+                except OSError:
+                    pass
                 return False
         _out, _err, exitcode = errRun( 'cgdelete -r ' + self.cgroup )
         # Sometimes cgdelete returns a resource busy error but still
@@ -777,7 +788,7 @@ class CPULimitedHost( Host ):
                                        '-da', str( self.pid ) ] )
         # if our cgroup is not given any cpu time,
         # we cannot assign the RR Scheduler.
-        if self.sched == 'rt':
+        if self.sched == 'rt' and self.cgversion != 'cgroup2':
             if int( self.cgroupGet( 'rt_runtime_us', 'cpu' ) ) <= 0:
                 mncmd += [ '-r', str( self.rtprio ) ]
             else:
@@ -789,6 +800,15 @@ class CPULimitedHost( Host ):
         "Clean up Node, then clean up our cgroup"
         super( CPULimitedHost, self ).cleanup()
         retry( retries=3, delaySecs=.1, fn=self.cgroupDel )
+
+    def checkSched( self, sched ):
+        """Return a scheduler usable with our cgroup version:
+           sched=rt falls back to cfs on cgroups v2"""
+        if sched == 'rt' and self.cgversion == 'cgroup2':
+            warn( '*** warning: %s: sched=rt is not supported with '
+                  'cgroups v2; using sched=cfs\n' % self.name )
+            return 'cfs'
+        return sched
 
     _rtGroupSched = False   # internal class var: Is CONFIG_RT_GROUP_SCHED set?
 
@@ -856,6 +876,7 @@ class CPULimitedHost( Host ):
            and 'rt' requires CONFIG_RT_GROUP_SCHED"""
         if not sched:
             sched = self.sched
+        sched = self.checkSched( sched )
         if sched == 'rt':
             if not f or f < 0:
                 raise Exception( 'Please set a positive CPU fraction'

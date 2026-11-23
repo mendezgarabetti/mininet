@@ -59,8 +59,17 @@ try:
     import packaging.version  # replacement for distutils.version
     StrictVersion = packaging.version.parse
 except ImportError:  # python2.7 lacks ModuleNotFoundError
-    import distutils.version  # pylint: disable=deprecated-module
-    StrictVersion = distutils.version.StrictVersion
+    try:
+        import distutils.version  # pylint: disable=deprecated-module
+        StrictVersion = distutils.version.StrictVersion
+    except ImportError:
+        # Python >= 3.12 has no distutils; packaging may be missing too
+        def StrictVersion( version ):
+            "Return a comparable tuple from the leading x.y.z of version"
+            match = re.match( r'\d+(\.\d+)*', version.strip() )
+            if not match:
+                raise ValueError( 'invalid version: %r' % version )
+            return tuple( int( n ) for n in match.group().split( '.' ) )
 
 try:
     oldpexpect = None
@@ -261,6 +270,8 @@ def makeIntfPair( intf1, intf2, addr1=None, addr2=None, node1=None, node2=None,
     if not runCmd:
         runCmd = quietRun if not node1 else node1.cmd
         runCmd2 = quietRun if not node2 else node2.cmd
+    else:
+        runCmd2 = runCmd
     if deleteIntfs:
         # Delete any old interfaces with the same names
         runCmd( 'ip link del ' + intf1 )
@@ -710,7 +721,9 @@ def waitListening( client=None, server='127.0.0.1', port=80, timeout=None ):
         raise Exception('Could not find telnet' )
     # pylint: disable=maybe-no-member
     serverIP = server if isinstance( server, BaseString ) else server.IP()
-    cmd = ( 'echo A | telnet -e A %s %s' % ( serverIP, port ) )
+    # Bound each attempt: some telnet versions (e.g. inetutils-telnet)
+    # can stay connected after stdin closes; 'Connected' is printed anyway
+    cmd = ( 'echo A | timeout 2 telnet -e A %s %s' % ( serverIP, port ) )
     time = 0
     result = runCmd( cmd )
     while 'Connected' not in result:

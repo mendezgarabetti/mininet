@@ -205,7 +205,10 @@ function mn_deps {
             ${PYTHON} -m pip install pexpect
         $install iproute2 || $install iproute
         $install cgroup-tools || $install cgroup-bin
-        $install cgroupfs-mount || true
+        # cgroupfs-mount is only needed (and only packaged) for cgroups v1
+        if [ ! -e /sys/fs/cgroup/cgroup.controllers ]; then
+            $install cgroupfs-mount || true
+        fi
     fi
 
     echo "Installing Mininet core"
@@ -246,6 +249,8 @@ function of {
 
     # Patch controller to handle more than 16 switches
     patch -p1 < $MININET_DIR/mininet/util/openflow-patches/controller.patch
+    # Build with glibc >= 2.38, which provides strlcpy()
+    patch -p1 < $MININET_DIR/mininet/util/openflow-patches/strlcpy.patch
 
     # Resume the install:
     ./boot.sh

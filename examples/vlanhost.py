@@ -64,6 +64,8 @@ hosts = { 'vlan': VLANHost }
 
 def exampleAllHosts( vlan ):
     """Simple example of how VLANHost can be used in a script"""
+    # Imports happen in __main__ below
+    # pylint: disable=possibly-used-before-assignment
     # This is where the magic happens...
     host = partial( VLANHost, vlan=vlan )
     # vlan (type: int): VLAN ID to be used by all hosts

@@ -47,9 +47,14 @@ slowtest: $(MININET)
 	mininet/test/test_walkthrough.py -v
 	mininet/examples/test/runner.py -v
 
+# Read the version from the source instead of running mn, whose output
+# may include warnings and break the C string literal
+MNVERSION = $(shell sed -n 's/^VERSION = "\(.*\)"$$/\1/p' mininet/net.py)
+
 mnexec: mnexec.c $(MN) mininet/net.py
+	test -n "$(MNVERSION)"
 	$(CC) $(CFLAGS) $(LDFLAGS) \
-	-DVERSION=\"`PYTHONPATH=. $(PYMN) --version 2>&1`\" $< -o $@
+	-DVERSION=\"$(MNVERSION)\" $< -o $@
 
 install-mnexec: $(MNEXEC)
 	install -D $(MNEXEC) $(BINDIR)/$(MNEXEC)
