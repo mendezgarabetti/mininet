@@ -19,7 +19,7 @@ class testTreePing64( unittest.TestCase ):
         p.expect( 'Tree network ping results:', timeout=6000 )
         count = 0
         while True:
-            index = p.expect( [ '(\d+)% packet loss', pexpect.EOF ] )
+            index = p.expect( [ r'(\d+)% packet loss', pexpect.EOF ] )
             if index == 0:
                 percent = int( p.match.group( 1 ) ) if p.match else -1
                 self.assertEqual( percent, 0 )

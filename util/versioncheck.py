@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 from subprocess import check_output as co
 from sys import exit, version_info
@@ -9,11 +9,11 @@ def run(*args, **kwargs):
     return result.decode() if version_info[ 0 ] >= 3 else result
 
 # Actually run bin/mn rather than importing via python path
-version = 'Mininet ' + run( 'PYTHONPATH=. bin/mn --version 2>&1', shell=True )
+version = 'Mininet ' + run( 'PYTHONPATH=. python3 bin/mn --version 2>&1', shell=True )
 version = version.strip()
 
 # Find all Mininet path references
-lines = run( "egrep -or 'Mininet [0-9\.\+]+\w*' *", shell=True )
+lines = run( r"grep -E -or 'Mininet [0-9\.\+]+\w*' *", shell=True )
 
 error = False
 

@@ -19,13 +19,13 @@ class testNATNet( unittest.TestCase ):
     def testPublicPing( self ):
         "Attempt to ping the public server (h0) from h1 and h2"
         self.net.sendline( 'h1 ping -c 1 h0' )
-        self.net.expect ( '(\d+)% packet loss' )
+        self.net.expect ( r'(\d+)% packet loss' )
         percent = int( self.net.match.group( 1 ) ) if self.net.match else -1
         self.assertEqual( percent, 0 )
         self.net.expect( self.prompt )
 
         self.net.sendline( 'h2 ping -c 1 h0' )
-        self.net.expect ( '(\d+)% packet loss' )
+        self.net.expect ( r'(\d+)% packet loss' )
         percent = int( self.net.match.group( 1 ) ) if self.net.match else -1
         self.assertEqual( percent, 0 )
         self.net.expect( self.prompt )

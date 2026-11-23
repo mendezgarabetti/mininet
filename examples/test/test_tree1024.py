@@ -18,7 +18,7 @@ class testTree1024( unittest.TestCase ):
         p = pexpect.spawn( 'python -m mininet.examples.tree1024' )
         p.expect( self.prompt, timeout=6000 ) # it takes awhile to set up
         p.sendline( 'h1 ping -c 20 h1024' )
-        p.expect ( '(\d+)% packet loss' )
+        p.expect ( r'(\d+)% packet loss' )
         packetLossPercent = int( p.match.group( 1 ) ) if p.match else -1
         p.expect( self.prompt )
         p.sendline( 'exit' )
