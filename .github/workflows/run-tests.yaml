@@ -8,6 +8,8 @@ jobs:
     name: Mininet Tests
     runs-on: ${{ matrix.os }}
     strategy:
+      # Run every OS even if one fails
+      fail-fast: false
       matrix:
         os: [ubuntu-24.04, ubuntu-22.04]
         py: [python3]
