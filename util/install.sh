@@ -103,10 +103,10 @@ function version_ge {
 }
 
 # Attempt to detect Python version
-PYTHON=${PYTHON:-python}
+PYTHON=${PYTHON:-python3}
 PRINTVERSION='import sys; print(sys.version_info)'
 PYTHON_VERSION=unknown
-for python in $PYTHON python2 python3; do
+for python in $PYTHON python3 python2 python; do
     if $python -c "$PRINTVERSION" |& grep 'major=2'; then
         PYTHON=$python; PYTHON_VERSION=2; PYPKG=python
         break
@@ -173,24 +173,21 @@ function mn_deps {
 			ethtool help2man python-pyflakes python3-pylint \
                         python-pep8 ${PYPKG}-pexpect ${PYPKG}-tk
     else  # Debian/Ubuntu
-        pf=pyflakes
-        pep8=pep8
-        # Starting around 20.04, installing pyflakes instead of pyflakes3
-        # causes Python 2 to be installed, which is exactly NOT what we want.
-        if [ "$DIST" = "Ubuntu" -a `expr $RELEASE '>=' 20.04` = "1" ]; then
-                pf=pyflakes3
+        pf=pyflakes3
+        pep8=pycodestyle
+        if [ "$DIST" = "Ubuntu" -a `expr $RELEASE '<' 20.04` = "1" ]; then
+                pf=pyflakes
+                pep8=pep8
         fi
-        # Debian 11 "bullseye" renamed
-        # * pep8 to python3-pep8
-        # * pyflakes to pyflakes3
-        if [ "$DIST" = "Debian" -a `expr $RELEASE '>=' 11` = "1" ]; then
-                pf=pyflakes3
-                pep8=python3-pep8
+        if [ "$DIST" = "Debian" -a `expr $RELEASE '<' 11` = "1" ]; then
+                pf=pyflakes
+                pep8=pep8
         fi
 
-        $install gcc make socat psmisc xterm ssh iperf telnet \
-                 ethtool help2man $pf pylint $pep8 \
-                 net-tools ${PYPKG}-tk
+        $install gcc make socat psmisc xterm ssh iperf iperf3 traceroute \
+                 tcpdump telnet ethtool help2man $pf pylint \
+                 net-tools ${PYPKG}-tk ${PYPKG}-setuptools ${PYPKG}-pexpect
+        $install $pep8 || $install python3-pycodestyle || $install python3-pep8 || true
 
         # Install pip
         $install ${PYPKG}-pip || $install ${PYPKG}-pip-whl
@@ -203,10 +200,12 @@ function mn_deps {
             sudo ${PYTHON} get-pip.py
             rm get-pip.py
         fi
-       ${python} -m pip install pexpect
+        ${PYTHON} -c "import pexpect" 2>/dev/null || \
+            ${PYTHON} -m pip install --break-system-packages pexpect 2>/dev/null || \
+            ${PYTHON} -m pip install pexpect
         $install iproute2 || $install iproute
         $install cgroup-tools || $install cgroup-bin
-        $install cgroupfs-mount
+        $install cgroupfs-mount || true
     fi
 
     echo "Installing Mininet core"

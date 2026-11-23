@@ -9,14 +9,14 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Set up Python 3.x
-        uses: actions/setup-python@v2
+        uses: actions/setup-python@v5
         with:
-          python-version: 3.x
+          python-version: '3.12'
       - name: Check out Mininet source
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4
       - name: Install Mininet code check dependencies
         run: |
-          PYTHON=`which python` util/install.sh -n
-          python -m pip install pylint==2.15.7
+          PYTHON=`which python3` util/install.sh -n
+          python3 -m pip install pyflakes pycodestyle pylint
       - name: Run code check
         run:  make codecheck
