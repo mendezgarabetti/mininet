@@ -1,0 +1,38 @@
+diff --git a/lib/util.c b/lib/util.c
+index 21cc28d..1f341b1 100644
+--- a/lib/util.c
++++ b/lib/util.c
+@@ -138,6 +138,7 @@ xasprintf(const char *format, ...)
+     return s;
+ }
+ 
++#ifndef HAVE_STRLCPY
+ void
+ strlcpy(char *dst, const char *src, size_t size)
+ {
+@@ -148,6 +149,7 @@ strlcpy(char *dst, const char *src, size_t size)
+         dst[n_copy] = '\0';
+     }
+ }
++#endif
+ 
+ void
+ ofp_fatal(int err_no, const char *format, ...)
+diff --git a/lib/util.h b/lib/util.h
+index fde681f..6d7aeec 100644
+--- a/lib/util.h
++++ b/lib/util.h
+@@ -105,6 +105,13 @@ char *xasprintf(const char *format, ...) PRINTF_FORMAT(1, 2) MALLOC_LIKE;
+ char *xvasprintf(const char *format, va_list) PRINTF_FORMAT(1, 0) MALLOC_LIKE;
+ void *x2nrealloc(void *p, size_t *n, size_t s);
+ 
++/* glibc >= 2.38 declares size_t strlcpy() in <string.h>, but not every
++ * file includes config.h (which defines HAVE_STRLCPY) before this header. */
++#include <string.h>
++#if defined(__GLIBC__) && \
++    (__GLIBC__ > 2 || (__GLIBC__ == 2 && __GLIBC_MINOR__ >= 38))
++#define HAVE_STRLCPY 1
++#endif
+ #ifndef HAVE_STRLCPY
+ void strlcpy(char *dst, const char *src, size_t size);
+ #endif

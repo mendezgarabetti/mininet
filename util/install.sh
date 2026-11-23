@@ -247,6 +247,8 @@ function of {
 
     # Patch controller to handle more than 16 switches
     patch -p1 < $MININET_DIR/mininet/util/openflow-patches/controller.patch
+    # Build with glibc >= 2.38, which provides strlcpy()
+    patch -p1 < $MININET_DIR/mininet/util/openflow-patches/strlcpy.patch
 
     # Resume the install:
     ./boot.sh
