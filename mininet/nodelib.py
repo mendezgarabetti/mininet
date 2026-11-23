@@ -157,6 +157,7 @@ class NAT( Node ):
 class LinuxRouter( Node ):
     "A Node with IPv4 forwarding enabled by default."
 
+    # pylint: disable=arguments-differ
     def config( self, **params ):
         "Configure router and enable IPv4 packet forwarding"
         super( LinuxRouter, self ).config( **params )
