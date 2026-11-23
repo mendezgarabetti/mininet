@@ -59,8 +59,17 @@ try:
     import packaging.version  # replacement for distutils.version
     StrictVersion = packaging.version.parse
 except ImportError:  # python2.7 lacks ModuleNotFoundError
-    import distutils.version  # pylint: disable=deprecated-module
-    StrictVersion = distutils.version.StrictVersion
+    try:
+        import distutils.version  # pylint: disable=deprecated-module
+        StrictVersion = distutils.version.StrictVersion
+    except ImportError:
+        # Python >= 3.12 has no distutils; packaging may be missing too
+        def StrictVersion( version ):
+            "Return a comparable tuple from the leading x.y.z of version"
+            match = re.match( r'\d+(\.\d+)*', version.strip() )
+            if not match:
+                raise ValueError( 'invalid version: %r' % version )
+            return tuple( int( n ) for n in match.group().split( '.' ) )
 
 try:
     oldpexpect = None
