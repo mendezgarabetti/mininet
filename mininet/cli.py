@@ -37,6 +37,8 @@ import os
 import atexit
 
 from mininet.log import info, output, error
+from mininet.node import OVSSwitch
+from mininet.nodelib import LinuxBridge
 from mininet.term import makeTerms, runX11
 from mininet.util import ( quietRun, dumpNodeConnections,
                            dumpPorts )
@@ -426,19 +428,31 @@ class CLI( Cmd ):
            Usage: arps [node1 node2 ...]"""
         self.showNamespaceTable( line, 'arps', 'ip neigh' )
 
+    @staticmethod
+    def macTable( sw ):
+        "Return the MAC learning table of switch sw (or its flows)"
+        if isinstance( sw, OVSSwitch ) and sw.failMode == 'standalone':
+            return sw.cmd( 'ovs-appctl fdb/show', sw )
+        if isinstance( sw, LinuxBridge ):
+            return sw.cmd( 'brctl showmacs', sw )
+        # OpenFlow switches forward according to flows installed
+        # by the controller, so there is no MAC table to show
+        return ( '(%s is an OpenFlow switch without a MAC learning '
+                 'table; showing its flows instead)\n' % sw +
+                 sw.dpctl( 'dump-flows' ) )
+
     def do_macs( self, line ):
         """Display learned MAC tables for all switches or given switches.
            Usage: macs [switch1 switch2 ...]"""
-        args = line.split()
-        switches = [ self.mn[ a ] for a in args if a in self.mn ]
-        if not switches:
+        switches = self.nodesFromArgs( line, 'macs' )
+        if switches is None:
             switches = self.mn.switches
         for sw in switches:
+            if sw not in self.mn.switches:
+                error( 'macs: %s is not a switch\n' % sw.name )
+                continue
             output( '*** ' + sw.name + ' ' + ( '-' * 72 ) + '\n' )
-            cmd = ( 'ovs-appctl fdb/show %s 2>/dev/null || '
-                    'brctl showmacs %s 2>/dev/null || '
-                    'bridge fdb show br %s' % ( sw.name, sw.name, sw.name ) )
-            output( sw.cmd( cmd ) )
+            output( self.macTable( sw ) )
 
     def do_switch( self, line ):
         "Starts or stops a switch"
