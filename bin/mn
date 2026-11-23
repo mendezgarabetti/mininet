@@ -34,11 +34,11 @@ from mininet.node import ( Host, CPULimitedHost, Controller, OVSController,
                            DefaultController, NullController,
                            UserSwitch, OVSSwitch, OVSBridge,
                            IVSSwitch )
-from mininet.nodelib import LinuxBridge
+from mininet.nodelib import LinuxBridge, LinuxRouter
 from mininet.link import Link, TCLink, TCULink, OVSLink
 from mininet.topo import ( SingleSwitchTopo, LinearTopo,
                            SingleSwitchReversedTopo, MinimalTopo )
-from mininet.topolib import TreeTopo, TorusTopo
+from mininet.topolib import TreeTopo, TorusTopo, RoutedTopo
 from mininet.util import customClass, specialClass, splitArgs, buildTopo
 
 # Experimental! cluster edition prototype
@@ -56,6 +56,7 @@ TOPODEF = 'minimal'
 TOPOS = { 'minimal': MinimalTopo,
           'linear': LinearTopo,
           'reversed': SingleSwitchReversedTopo,
+          'routed': RoutedTopo,
           'single': SingleSwitchTopo,
           'tree': TreeTopo,
           'torus': TorusTopo }
@@ -72,6 +73,7 @@ SWITCHES = { 'user': UserSwitch,
 
 HOSTDEF = 'proc'
 HOSTS = { 'proc': Host,
+          'router': LinuxRouter,
           'rt': specialClass( CPULimitedHost, defaults=dict( sched='rt' ) ),
           'cfs': specialClass( CPULimitedHost, defaults=dict( sched='cfs' ) ) }
 

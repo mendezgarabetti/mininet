@@ -2,6 +2,7 @@
 
 from mininet.topo import Topo
 from mininet.net import Mininet
+from mininet.nodelib import LinuxRouter
 
 # The build() method is expected to do this:
 # pylint: disable=arguments-differ
@@ -80,5 +81,36 @@ class TorusTopo( Topo ):
                 sw3 = switches[ ( i + 1 ) % x, j ]
                 self.addLink( sw1, sw2 )
                 self.addLink( sw1, sw3 )
+
+
+class RoutedTopo( Topo ):
+    """Topology with k /24 IPv4 subnets connected by a LinuxRouter (r1).
+       Each subnet i (1..k) uses 192.168.i.0/24 with gateway 192.168.i.1
+       on switch s_i and h hosts (192.168.i.10, .11, ...)."""
+
+    def build( self, k=2, h=1 ):
+        """k: number of routed /24 subnets (default 2)
+           h: number of hosts per subnet (default 1)"""
+        router = self.addNode( 'r1', cls=LinuxRouter, ip='192.168.1.1/24' )
+        hostNum = 1
+        for i in range( 1, k + 1 ):
+            sw = self.addSwitch( 's%d' % i )
+            rIntf = 'r1-eth%d' % ( i - 1 )
+            rIP = '192.168.%d.1/24' % i
+            self.addLink( sw, router, intfName2=rIntf,
+                          params2={ 'ip': rIP } )
+            for j in range( 1, h + 1 ):
+                hostIP = '192.168.%d.%d/24' % ( i, 9 + j )
+                gw = 'via 192.168.%d.1' % i
+                host = self.addHost( 'h%d' % hostNum, ip=hostIP,
+                                     defaultRoute=gw )
+                self.addLink( host, sw )
+                hostNum += 1
+
+
+def RoutedNet( k=2, h=1, **kwargs ):
+    "Convenience function for creating routed subnet networks."
+    topo = RoutedTopo( k, h )
+    return Mininet( topo, **kwargs )
 
 # pylint: enable=arguments-differ
